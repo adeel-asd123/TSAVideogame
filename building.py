@@ -8,6 +8,9 @@ import direct.gui.DirectGuiGlobals as DGG
 from direct.gui.DirectGui import *
 from direct.gui.OnscreenImage import OnscreenImage
 from direct.showbase.Transitions import Transitions
+
+#loadPrcFileData("", "texture-minfilter linear-mipmap-linear")
+
 class CameraControllerBehaviour(DirectObject):
     _instances = 0
     def __init__(self, camera, velocity=9, mouse_sensitivity=0.2, initial_pos=(-0.5, -12, 7.7), showbase=None):
@@ -133,39 +136,59 @@ class CameraControllerBehaviour(DirectObject):
         # Update the camera's position
         self._showbase.camera.setPos(self.cam_pos)
         return Task.cont
-        
 class MyApp(ShowBase):
-    
     password = ""
+    bossspawned = False
+    finalbosscollider = None
+    def updateboss(self, task):
+        self.finalmodel.setPos(self.bossaimodel.getPos())
+        self.finalmodel.setHpr(self.bossaimodel.getH(), 60, 10) 
+        self.finalmodel.setZ(20)
+        self.bosshealthbar["value"] = self.bosshealth
+        if self.bosshealth <= 0:
+            self.finalmodel.removeNode()
+            self.bosshealthbar.destroy()
+            winscreen = OnscreenImage(image = r"models/OIP.png", pos = (-.8, 0, .8), scale = (.1, .1, .1))
+        return Task.cont
     def tutorial(self, task):
-        if int(task.time) < 5:
+        if task.time < 10:
             return Task.cont
-        self.start == False
+        self.tutorialine1.destroy()
+        self.tutorialine2.destroy()
+        self.tutorialine3.destroy()
+        self.tutorialine4.destroy()
+        self.tutorialine5.destroy()
+        self.tutorialine6.destroy()
+        self.set()
+        self.spawnateachdoor(1)
+        self.start = False
         return Task.done
-#    def finalboss(self):
-#        self.finalmodel = self.loader.loadModel(r"models/Ghoooooost.glb")
-#        self.finalmodel.reparentTo(self.render)
-#        self.finalmodel.setScale(10)
-#        self.finalmodel.setPos(0, 0, 10)
-#        self.finalmodel.setHpr(0, 90, 90)
-#        self.finalbosscollison = CollisionNode("finalbosscollison")
-#        self.finalbosscollison.addSolid(CollisionSphere(0, 0, 0, 10))
-#        self.finalbosscollisonpath = self.finalmodel.attachNewNode(self.finalbosscollison)
-#        self.cTrav.addCollider(self.finalbosscollisonpath, self.npcintocam)
-#        self.finalbossaicharacter = AICharacter()
+    def finalboss(self):
+        self.bosshealth = 100
+        self.bossspawned = True
+        self.bosshealthbar = DirectWaitBar(text="Boss HP", value=100, pos=(0, -15, .6))
+        self.finalmodel = self.loader.loadModel(r"models/Ghoooooost.glb")
+        self.finalmodel.reparentTo(self.render)
+        self.finalmodel.setScale(10)
+        self.finalmodel.setPos(0, 0, 17)
+        self.finalmodel.setHpr(0, 90, 90)
+        self.finalbosscollison = CollisionNode("finalbosscollison")
+        self.finalbosscollison.addSolid(CollisionSphere(0, 0, 0, .1))
+        self.finalbosscollisonpath = self.finalmodel.attachNewNode(self.finalbosscollison)
+        self.cTrav.addCollider(self.finalbosscollisonpath, self.npcintocam)
+        self.bossaimodel = self.loader.loadModel(r"models/aidotupdater.glb")
+        self.finalbossaicharacter = AICharacter("finalboss", self.bossaimodel, 100, .1, 5)
+        self.Aiworld.addAiChar(self.finalbossaicharacter)
+        self.finalbosscollider = CollisionNode("finalbosscollider")
+        self.finalbosscollider.addSolid(CollisionSphere(0, 0, 0, .1))
+        self.finalbossColliderpath = self.finalmodel.attachNewNode(self.finalbosscollider)
+        self.finalbossbehaviour = self.finalbossaicharacter.getAiBehaviors()
+        self.finalbossbehaviour.pursue(self.camera)
+        self.finalbossbehaviour.arrival(2)
+        self.cTrav.addCollider(self.finalbossColliderpath, self.npcintocam)
+        taskMgr.add(self.updateboss, "updatebossposition")
     def keyposupdate(self, task):
-        self.onebutton.destroy()
-        self.twobutton.destroy()
-        self.threebutton.destroy()
-        self.fourbutton.destroy()
-        self.fivebutton.destroy()
-        self.sixbutton.destroy()
-        self.sevenbutton.destroy()
-        self.eightbutton.destroy()
-        self.ninebutton.destroy()
-        self.zerobutton.destroy()
-        self.clearbutton.destroy()
-        self.enterbutton.destroy()
+        
         camera_forward = self.camera.getQuat(self.render).getForward()
         camera_up = self.camera.getQuat(self.render).getUp()
         camera_left = self.camera.getQuat(self.render).getRight()
@@ -226,12 +249,28 @@ class MyApp(ShowBase):
                 self.keymodel.reparentTo(self.render)
                 self.keymodel.setScale(4)
                 self.cam_controller.setup()
+                self.onebutton.destroy()
+                self.twobutton.destroy()
+                self.threebutton.destroy()
+                self.fourbutton.destroy()
+                self.fivebutton.destroy()
+                self.sixbutton.destroy()
+                self.sevenbutton.destroy()
+                self.eightbutton.destroy()
+                self.ninebutton.destroy()
+                self.zerobutton.destroy()
+                self.clearbutton.destroy()
+                self.enterbutton.destroy()
                 taskMgr.add(self.keyposupdate, "keyposupdate")
                 print("Password Correct")
         self.enterbutton = DirectButton(text=("enter", "enter", "enter", "disabled"), scale=.1, command=checkpassword, pos = (.35, -10, -.6))
     def manaupdate(self, task):
-        self.manaamount = self.manaamount + .01
+        self.manaamount = self.manaamount + .04
         self.manabar['value'] = self.manaamount
+        if self.healthpoints < 100:
+            self.healthpoints = self.healthpoints + .01
+        else:
+            self.healthpoints = 100
         return Task.cont
     def death(self):    
         transitions = Transitions(loader=self.render)
@@ -266,6 +305,9 @@ class MyApp(ShowBase):
         self.spawnnpcs(num_npcs*4, 14, -49)
     def click(self):
         # Create a CollisionRay for the wand
+        props = self.win.getProperties()
+        if not props.getForeground() or not props.getCursorHidden() or props.getMouseMode() != WindowProperties.MRelative:
+            self.win.requestProperties(WindowProperties(foreground=True, mouse_mode=WindowProperties.MRelative, cursor_hidden=True))
         ray_node = CollisionNode('wand-ray')
         ray = CollisionRay()
         ray.setOrigin(0, 0, 0)  # Start at the camera
@@ -290,11 +332,17 @@ class MyApp(ShowBase):
                 collision_queue.sortEntries()
                 entry = collision_queue.getEntry(1)  # Get the closest collision
                 hit_node = entry.getIntoNode()
-                if hit_node == self.safe_node:
-                    print("safe")
-                    self.safenumpad()
+                for hits in collision_queue.getEntries():
+                    if hits.getIntoNode() == self.safe_node:
+                        print("safe")
+                        self.safenumpad()
                 if hit_node == self.upstairdoor_collision_node and self.haskey == True:
+                    taskMgr.remove("keyposupdate")
+                    self.keymodel.removeNode()
                     self.upstairdoor_collision_node.removeSolid(0)
+                    self.finalboss()
+                if hit_node == self.finalbosscollider and self.bossspawned == True:
+                    self.bosshealth - 3
                 # Find the ghost that was hit
                 ghosts_to_remove = []  # Queue for ghosts to remove
                 for ghost_name, ghost in self.npcs.items():
@@ -359,6 +407,7 @@ class MyApp(ShowBase):
         self.npchealths = {}
         self.healthpoints=100
         self.manaamount=100
+        self.wavetext = OnscreenText(text="Wave: ", pos=(0,0.9), scale=0.1, fg=(1, 1, 1, 1), shadow=(0, 0, 0, .5))
         self.bar = DirectWaitBar(text="HP", value=100, pos=(-.5, -15, -.8))
         self.bar['barColor'] = (0, 2, 0, 2)
         self.bar['text_scale'] = .05
@@ -508,19 +557,21 @@ class MyApp(ShowBase):
         self.i = 0
         self.died = False
         self.waves = 1
-        self.safe_node = CollisionNode('safe')
-        self.safe_node.addSolid(CollisionBox(Point3(-28, -11 , 6), 1, 1, 1))
-        self.safe_node_path = self.render.attachNewNode(self.safe_node)
-        self.safe_node_path.show()
+    
         #AI World updated
         taskMgr.add(self.Update,"Update")
-        taskMgr.add(self.tutorial,"tutorial")
         taskMgr.add(self.manaupdate,"manaupdate")
     def Update(self,task):
         camera_forward = self.camera.getQuat(self.render).getForward()
         camera_up = self.camera.getQuat(self.render).getUp()
         camera_right = self.camera.getQuat(self.render).getRight()
         camera_position = self.camera.getPos(self.render)
+        self.tutorialine1.destroy()
+        self.tutorialine2.destroy()
+        self.tutorialine3.destroy()
+        self.tutorialine4.destroy()
+        self.tutorialine5.destroy()
+        self.tutorialine6.destroy()
 #        print(camera_position)
         # Calculate wand position: forward, slightly downward, and to the right
         wand_position = (
@@ -563,7 +614,8 @@ class MyApp(ShowBase):
         npcs_to_remove = []
         if self.npcs == {} and self.start == False:
             self.waves += 1
-            self.wavetext = OnscreenText(text="Wave: " + str(self.waves), pos=(0,0.9), scale=0.1, fg=(1, 1, 1, 1), shadow=(0, 0, 0, .5))
+            
+            self.wavetext.setText("Wave: " + str(self.waves))
             lowerwaves = (1,2,3,4)
             higherwaves = (5,6,7,8)
             if self.waves in lowerwaves:
@@ -595,8 +647,18 @@ class MyApp(ShowBase):
             'space':"up",
             'e':"down"})
         self.loadmodels()
-        self.set()
+        taskMgr.add(self.tutorial,"tutorial")
+        self.tutorialine1 = OnscreenText(text="Welcome to the game!", pos=(0,0.9), scale=0.08, fg=(1, 1, 1, 1), shadow=(0, 0, 0, .5))
+        self.tutorialine2 = OnscreenText(text="W: Move Forward, S: Move Backward, A: Move Left, D: Move Right", pos=(0,0.7), scale=0.08, fg=(1, 1, 1, 1), shadow=(0, 0, 0, .5))
+        self.tutorialine3 = OnscreenText(text="Click ghosts to make them disappear", pos=(0,0.5), scale=0.08, fg=(1, 1, 1, 1), shadow=(0, 0, 0, .5))
+        self.tutorialine4 = OnscreenText(text="There are numbers around the house, find them and put the numbers into the safe", pos=(0,0.3), scale=0.07, fg=(1, 1, 1, 1), shadow=(0, 0, 0, .5))
+        self.tutorialine5 = OnscreenText(text="There you will get a key, use it to open the big door to your left", pos=(0,0.1), scale=0.08, fg=(1, 1, 1, 1), shadow=(0, 0, 0, .5))
+        self.tutorialine6 = OnscreenText(text="The numbers are in pairs, don't mix them up", pos=(0,-0.1), scale=0.08, fg=(1, 1, 1, 1), shadow=(0, 0, 0, .5))
         self.start = True
+        self.safe_node = CollisionNode('safe')
+        self.safe_node.addSolid(CollisionBox(Point3(-28, -11 , 4), 1, 1, 1))
+        self.safe_node_path = self.render.attachNewNode(self.safe_node)
+        self.safe_node_path.show()
         self.accept('mouse1', self.click)
         self.accept('into-camera', self.Dmgbynpc)
         # Create a collision node for a walld
