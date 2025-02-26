@@ -150,7 +150,7 @@ class MyApp(ShowBase):
         self.card.removeNode()
         return Task.done
     def tutorial(self, task):
-        if task.time < 1:
+        if task.time < 9:
             return Task.cont
         self.tutorialine1.destroy()
         self.tutorialine2.destroy()
