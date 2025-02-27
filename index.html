@@ -62,7 +62,55 @@
       <div class="u-container-style u-dialog u-white u-dialog-1">
         <div class="u-container-layout u-valign-middle u-container-layout-1">
           <div class="custom-expanded u-align-left u-clearfix u-custom-html u-custom-html-1">
-            <iframe frameborder="0" src="https://itch.io/embed-upload/12657989?color=747474" allowfullscreen="" width="1000" height="650"><a href="https://adwins1.itch.io/team1034-1tsagame">Play Team1034-1Tsagame on itch.io</a></iframe>
+            <div id="main">
+              <div id="ld">
+              <img id="logo" src="panda3d-logo.jpg" alt="[logo]">
+              <span id="ldtext">Uh, you have JavaScript disabled. This application won't work.</span>
+              <script type="text/javascript">var ldtext = document.getElementById("ldtext");ldtext.innerHTML="Checking browser compatibility...";</script>
+              <div id="ldbar-outer"><div id="ldbar"></div></div>
+              </div>
+              <canvas id="canvas" style="display:none;" oncontextmenu="event.preventDefault()" tabindex="-1"></canvas>
+              <script type="text/javascript">
+              var ldtext = document.getElementById("ldtext");
+              var ldbar = document.getElementById("ldbar");
+              var ld = document.getElementById("ld");
+              var canvas = document.getElementById("canvas");
+              
+              var Module = {
+                preRun: [],
+                postRun: [],
+                canvas: (function() {
+                  return canvas;
+                })(),
+                setStatus: function(text) {
+                  var m = text.match(/([^(]+)\((\d+(\.\d+)?)\/(\d+)\)/);
+                  if (m) {
+                    ldtext.innerHTML = m[1];
+                    var percentComplete = parseInt(m[2]) / parseInt(m[4]) * 100;
+                    ldbar.style.width = percentComplete + '%';
+                  } else {
+                    ldtext.innerHTML = text;
+                  }
+                  if (text === 'Done!' || !text) {
+                    ld.style.display = "none";
+                    canvas.style.display = "block";
+                  }
+                },
+                totalDependencies: 0,
+                monitorRunDependencies: function(left) {
+                  this.totalDependencies = Math.max(this.totalDependencies, left);
+                  var percentComplete = ((this.totalDependencies-left) / this.totalDependencies)*100;
+                  ldbar.style.width = percentComplete + '%';
+                },
+              };
+              Module.setStatus('Downloading...');
+              window.onerror = function(event) {
+                // TODO: do not warn on ok events like simulating an infinite loop or exitStatus
+                ldtext.innerHTML = 'Exception thrown, see JavaScript console';
+              };
+              </script>
+              <script async type="text/javascript" src="TSAVideoGame.js"></script>
+              </div>
           </div>
         </div>
         <button class="u-dialog-close-button u-icon u-text-grey-40 u-icon-1"><svg class="u-svg-link" preserveAspectRatio="xMidYMin slice" viewBox="0 0 16 16" style=""><use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#svg-efe9"></use></svg><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" xml:space="preserve" class="u-svg-content" viewBox="0 0 16 16" x="0px" y="0px" id="svg-efe9"><rect x="7" y="0" transform="matrix(0.7071 -0.7071 0.7071 0.7071 -3.3138 8.0002)" width="2" height="16"></rect><rect x="0" y="7" transform="matrix(0.7071 -0.7071 0.7071 0.7071 -3.3138 8.0002)" width="16" height="2"></rect></svg></button>
