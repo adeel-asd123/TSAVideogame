@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+
+<head>
+<title>Game</title>
+<link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Roboto" />
+<style type="text/css">
+body {
+    background: #252525;
+    font-family: Roboto, sans-serif;
+    color: #eee;
+    margin: 0px;
+    padding: 0px;
+}
+
+html {
+    height:100%;
+    margin: 0px;
+    padding: 0px;}
+
+div#main {
+    display: block;}
+
+img#logo {
+    margin-top: 15%;}
+
+span#ldtext {
+    display: block;
+    font-size: 13pt;
+    margin-top: 80px;
+}
+
+a {
+  color: #eee;
+  text-decoration: none;
+}
+
+a:hover {
+  color: #eee;
+  text-decoration: underline;
+}
+
+div#ldbar-outer {
+    background-color: #333;
+    margin-top: 15px;
+    height: 11px;
+    width: 400px;
+    text-align: left;
+}
+
+div#ldbar {
+    background-color: #39f;
+    width:0%;
+    height:100%;
+}
+
+canvas#canvas {
+  position: absolute;
+  outline: none;
+  width: 100% !important;
+  height: 100% !important;
+}
+</style>
+</head>
+
+<body>
+<center>
+<div id="main">
+<div id="ld">
+<img id="logo" src="panda3d-logo.jpg" alt="[logo]">
+<span id="ldtext">Uh, you have JavaScript disabled. This application won't work.</span>
+<script type="text/javascript">var ldtext = document.getElementById("ldtext");ldtext.innerHTML="Checking browser compatibility...";</script>
+<div id="ldbar-outer"><div id="ldbar"></div></div>
+</div>
+<canvas id="canvas" style="display:none;" oncontextmenu="event.preventDefault()" tabindex="-1"></canvas>
+<script type="text/javascript">
+var ldtext = document.getElementById("ldtext");
+var ldbar = document.getElementById("ldbar");
+var ld = document.getElementById("ld");
+var canvas = document.getElementById("canvas");
+
+var Module = {
+  preRun: [],
+  postRun: [],
+  canvas: (function() {
+    return canvas;
+  })(),
+  setStatus: function(text) {
+    var m = text.match(/([^(]+)\((\d+(\.\d+)?)\/(\d+)\)/);
+    if (m) {
+      ldtext.innerHTML = m[1];
+      var percentComplete = parseInt(m[2]) / parseInt(m[4]) * 100;
+      ldbar.style.width = percentComplete + '%';
+    } else {
+      ldtext.innerHTML = text;
+    }
+    if (text === 'Done!' || !text) {
+      ld.style.display = "none";
+      canvas.style.display = "block";
+    }
+  },
+  totalDependencies: 0,
+  monitorRunDependencies: function(left) {
+    this.totalDependencies = Math.max(this.totalDependencies, left);
+    var percentComplete = ((this.totalDependencies-left) / this.totalDependencies)*100;
+    ldbar.style.width = percentComplete + '%';
+  },
+};
+Module.setStatus('Downloading...');
+window.onerror = function(event) {
+  // TODO: do not warn on ok events like simulating an infinite loop or exitStatus
+  ldtext.innerHTML = 'Exception thrown, see JavaScript console';
+};
+</script>
+<script async type="text/javascript" src="TSAVideoGame.js"></script>
+</div>
+</center>
+</body>
+
+</html>
