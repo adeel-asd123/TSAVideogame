@@ -9,7 +9,7 @@ from direct.gui.DirectGui import *
 from direct.gui.OnscreenImage import OnscreenImage
 from direct.showbase.Transitions import Transitions
 
-loadPrcFileData("", "texture-minfilter linear-mipmap-linear")
+loadPrcFileData("", "texture-minfilter linear-mipmap-linear cache-generated-shaders")
 
 class CameraControllerBehaviour(DirectObject):
     _instances = 0
@@ -52,6 +52,10 @@ class CameraControllerBehaviour(DirectObject):
         self._showbase.win.requestProperties(props)
 
         self._showbase.taskMgr.add(self.update, "UpdateCameraTask" + str(self._instance))
+    
+    def rewatch(self):
+        for key in self._keys:
+            self._input_state.watchWithModifiers(self._keys[key], key)
     
     def destroy(self):
         self.disable()
@@ -149,7 +153,7 @@ class MyApp(ShowBase):
     haskey = False
     won = False
     def movieplay(self, task):
-        if task.time < 7:
+        if task.time < 2:
             return Task.cont
         self.card.removeNode()
         return Task.done
@@ -162,7 +166,7 @@ class MyApp(ShowBase):
         self.tutorialine4.destroy()
         self.tutorialine5.destroy()
         self.tutorialine6.destroy()
-        self.cam_controller = CameraControllerBehaviour(self.camera, velocity=9, mouse_sensitivity=.02)
+        self.cam_controller = CameraControllerBehaviour(self.camera, velocity=9, mouse_sensitivity=.2)
         self.cam_controller.setup(keys={'w':"forward",
             's':"backward",
             'a':"left",
@@ -174,7 +178,7 @@ class MyApp(ShowBase):
         self.start = False
         return Task.done
     def finalboss(self):
-        movietex = self.loader.loadTexture(r"models/cutscene.avi")
+        movietex = self.loader.loadTexture(r"models/cutscene.mp4")
         self.cm = CardMaker("card")
         self.cm.setFrameFullscreenQuad()
         self.cm.setUvRange(movietex)
@@ -217,7 +221,7 @@ class MyApp(ShowBase):
         return Task.cont
     def safenumpad(self):
         self.safepadopen = True
-        self.cam_controller.disable()
+        self.win.requestProperties(WindowProperties(foreground=True, mouse_mode=WindowProperties.MAbsolute, cursor_hidden=False))
         self.keymodel = self.loader.loadModel(r"models/key.glb")
         self.keyimage = ()
         self.password = ""
@@ -262,10 +266,8 @@ class MyApp(ShowBase):
                 self.keyimage.setTransparency(True)
                 self.keymodel.reparentTo(self.render)
                 self.keymodel.setScale(4)
-                props = self.win.getProperties()
-                if not props.getForeground() or not props.getCursorHidden() or props.getMouseMode() != WindowProperties.MRelative:
-                    self.win.requestProperties(WindowProperties(foreground=True, mouse_mode=WindowProperties.MRelative, cursor_hidden=True))
-                self.cam_controller.setup()
+                self.win.requestProperties(WindowProperties(foreground=True, mouse_mode=WindowProperties.MRelative, cursor_hidden=True))
+                self.cam_controller.rewatch()
                 self.onebutton.destroy()
                 self.twobutton.destroy()
                 self.threebutton.destroy()
@@ -324,9 +326,7 @@ class MyApp(ShowBase):
         self.spawnnpcs(num_npcs*4, 14, -49)
     def click(self):
         # Create a CollisionRay for the wand
-        props = self.win.getProperties()
-        if not props.getForeground() or not props.getCursorHidden() or props.getMouseMode() != WindowProperties.MRelative:
-            self.win.requestProperties(WindowProperties(foreground=True, mouse_mode=WindowProperties.MRelative, cursor_hidden=True))
+        self.win.requestProperties(WindowProperties(foreground=True, mouse_mode=WindowProperties.MRelative, cursor_hidden=True))
         ray_node = CollisionNode('wand-ray')
         ray = CollisionRay()
         ray.setOrigin(0, 0, 0)  # Start at the camera
@@ -444,6 +444,7 @@ class MyApp(ShowBase):
             pos=(0, 0, 0),  # Center of the screen
             scale=0.05       # Adjust scale for size
         )
+        self.render.setShaderAuto()
         self.plight = PointLight('dlight')
         self.plnp = self.camera.attachNewNode(self.plight)
         self.render.setLight(self.plnp)
