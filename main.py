@@ -46,8 +46,8 @@ class CameraControllerBehaviour(DirectObject):
         self._showbase.disableMouse()
 
         props = WindowProperties()
+        props.setMouseMode(WindowProperties.MConfined)
         props.setCursorHidden(True)
-        props.setMouseMode(WindowProperties.MRelative)
 
         self._showbase.win.requestProperties(props)
 
@@ -166,7 +166,7 @@ class MyApp(ShowBase):
         self.tutorialine4.destroy()
         self.tutorialine5.destroy()
         self.tutorialine6.destroy()
-        self.cam_controller = CameraControllerBehaviour(self.camera, velocity=9, mouse_sensitivity=.2)
+        self.cam_controller = CameraControllerBehaviour(self.camera, velocity=9, mouse_sensitivity=.5)
         self.cam_controller.setup(keys={'w':"forward",
             's':"backward",
             'a':"left",
@@ -221,7 +221,7 @@ class MyApp(ShowBase):
         return Task.cont
     def safenumpad(self):
         self.safepadopen = True
-        self.win.requestProperties(WindowProperties(foreground=True, mouse_mode=WindowProperties.MAbsolute, cursor_hidden=False))
+        self.win.requestProperties(WindowProperties(foreground=False, mouse_mode=WindowProperties.MConfined, cursor_hidden=False))
         self.keymodel = self.loader.loadModel(r"models/key.glb")
         self.keyimage = ()
         self.password = ""
@@ -266,7 +266,7 @@ class MyApp(ShowBase):
                 self.keyimage.setTransparency(True)
                 self.keymodel.reparentTo(self.render)
                 self.keymodel.setScale(4)
-                self.win.requestProperties(WindowProperties(foreground=True, mouse_mode=WindowProperties.MRelative, cursor_hidden=True))
+                self.win.requestProperties(WindowProperties(foreground=True, mouse_mode=WindowProperties.MConfined, cursor_hidden=True))
                 self.cam_controller.rewatch()
                 self.onebutton.destroy()
                 self.twobutton.destroy()
@@ -326,7 +326,9 @@ class MyApp(ShowBase):
         self.spawnnpcs(num_npcs*4, 14, -49)
     def click(self):
         # Create a CollisionRay for the wand
-        self.win.requestProperties(WindowProperties(foreground=True, mouse_mode=WindowProperties.MRelative, cursor_hidden=True))
+        props = self.win.getProperties()
+        if not props.getForeground() or not props.getCursorHidden() or props.getMouseMode() != WindowProperties.MCConfined:
+            self.win.requestProperties(WindowProperties(foreground=True, mouse_mode=WindowProperties.MConfined, cursor_hidden=True))
         ray_node = CollisionNode('wand-ray')
         ray = CollisionRay()
         ray.setOrigin(0, 0, 0)  # Start at the camera
